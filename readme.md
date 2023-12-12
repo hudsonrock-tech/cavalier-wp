@@ -12,6 +12,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Cavalier by Hudson Rock is a powerful security plugin that provides seamless integration between your WordPress website and the Cavalier Web App at [https://cavalier.hudsonrock.com](https://cavalier.hudsonrock.com). Monitor your website's domain for new compromised employees and users, receive email notifications, and display relevant data in your WordPress admin dashboard.
 
 Main Features:
+
 - Full access to the Cavalier Web App at [https://cavalier.hudsonrock.com](https://cavalier.hudsonrock.com)
 - Monitor your website's domain for new compromised employees and users.
 - Receive email notifications for new compromised employees and users.
@@ -74,13 +75,14 @@ Hudson Rock recommends revoking all the compromised credentials immediately to p
 2. ![Domain Verified](assets/screenshot-2.png)
    Screenshot of the domain verified in the WordPress admin panel.
 
-2. ![Domain Data](assets/screenshot-2.png)
+3. ![Domain Data](assets/screenshot-3.png)
    Screenshot of the domain data in the WordPress admin panel.
 
 == Changelog ==
 
 = 1.0 =
-* Initial release.
+
+- Initial release.
 
 == Upgrade Notice ==
 
