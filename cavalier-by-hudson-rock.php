@@ -231,7 +231,7 @@ function cavalier_data_page()
     $type = isset($_GET['type']) ? sanitize_text_field($_GET['type']) : $default_type;
     $cavalier_token = get_option('cavalier_token');
 
-    if ($cavalier_token) {
+    if ($cavalier_token && $counts["employees"] + $counts["users"] > 0) {
         echo '<div class="styledBox">To view plaintext passwords, extract data,<br/>and use additional features, please login to Cavalier.</div>';
         cavalier_login_button();
         $page = isset($_GET['paged']) ? intval($_GET['paged']) : 1;
@@ -302,6 +302,7 @@ function cavalier_data_page()
                     echo '</div>';
                     echo '</div>';
                 }
+
             } else {
                 echo '<h2>No data to show.</h2>';
             }
@@ -309,8 +310,12 @@ function cavalier_data_page()
             echo '<p>Error fetching data from the API: ' . esc_html($response->get_error_message()) . '</p>';
         }
     } else {
-        echo '<p>Domain is not verified. Please verify the domain first.</p>';
-        cavalier_verify_link();
+        if ($cavalier_token) {
+            echo '<h2>There is currently no data to display for your domain, you will receive an email notification if there is new data.</h2>';
+        } else {
+            echo '<p>Domain is not verified. Please verify the domain first.</p>';
+            cavalier_verify_link();
+        }
     }
 
     echo '</div>';
@@ -348,6 +353,8 @@ function cavalier_notice_bar()
 {
     if (!is_admin_user())
         return;
+    $users_url = admin_url('admin.php?page=cavalier-data&type=client');
+    $employees_url = admin_url('admin.php?page=cavalier-data&type=employee');
     $cavalier_token = get_option('cavalier_token');
     if ($cavalier_token) {
         $data = count_employees_users();
@@ -358,15 +365,16 @@ function cavalier_notice_bar()
         $show_users = $resolved_dates['users'];
         if ($show_employees && $employees > 0) {
             echo '<div class="employees-notice-bar cavalier-notice-bar">';
-            echo '<div class="notice-content"><div><img src="https://cavalier.hudsonrock.com/static/media/logo-1.967abb2c.png" width="30"/> New Compromised Employee Credentials Detected on Your Domain.</div><span style="color:white;" class="close-notice pointer" data-token="' . esc_attr($cavalier_token) . '" data-value="employees">X</span></div>';
+            echo '<div class="notice-content"><div><img src="https://cavalier.hudsonrock.com/static/media/logo-1.967abb2c.png" width="30"/> New Compromised Employee Credentials Detected on Your Domain. <a href="' . esc_url($employees_url) . '" class="button button-tertiary" style="margin-left:15px;">View Employees Data</a></div><span style="color:white;" class="close-notice pointer" data-token="' . esc_attr($cavalier_token) . '" data-value="employees">X</span></div>';
             echo '</div>';
         }
         if ($show_users && $users > 0) {
             echo '<div class="users-notice-bar cavalier-notice-bar">';
-            echo '<div class="notice-content"><div><img src="https://cavalier.hudsonrock.com/static/media/logo-1.967abb2c.png" width="30"/> New Compromised User Credentials Detected on Your Domain.</div><span style="color:white;" class="close-notice pointer" data-token="' . esc_attr($cavalier_token) . '" data-value="users">X</span></div>';
+            echo '<div class="notice-content"><div><img src="https://cavalier.hudsonrock.com/static/media/logo-1.967abb2c.png" width="30"/> New Compromised User Credentials Detected on Your Domain. <a href="' . esc_url($users_url) . '" class="button button-primary" style="margin-left:15px;">View Users Data</a></div><span style="color:white;" class="close-notice pointer" data-token="' . esc_attr($cavalier_token) . '" data-value="users">X</span></div>';
             echo '</div>';
         }
     }
 }
 
 add_action('admin_head', 'cavalier_notice_bar');
+
