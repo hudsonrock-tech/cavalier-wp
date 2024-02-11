@@ -67,15 +67,20 @@ It's important to note that even if all internal computers are secure, employees
 
 Hudson Rock recommends revoking all the compromised credentials immediately to prevent further access to your network by potential hackers with access to these credentials. As long as these credentials remain active, they can be used to access the organization's network to deploy ransomware attacks, information breaches, corporate espionage, and other intrusions. We advise alerting the employee to the breach and ask them to reset all personal credentials as well. After revoking the compromised credentials, organizations should investigate the usage of these credentials to see if they were used maliciously, and if persistent access was acquired by using them. In the case of compromised clients' credentials, we advise resetting the passwords of said clients and issuing an email explaining to them that steps to boost their security were taken place.
 
+== TOS ==
+
+Terms of Service: https://www.hudsonrock.com/tos
+Privacy Statement: https://www.hudsonrock.com/privacy
+
 == Screenshots ==
 
-1. ![Domain Verification Instructions](assets/screenshot-1.png)
+1. ![Domain Verification Instructions](assets/images/screenshot-1.png)
    Screenshot of the domain verification instructions in the WordPress admin panel.
 
-2. ![Domain Verified](assets/screenshot-2.png)
+2. ![Domain Verified](assets/images/screenshot-2.png)
    Screenshot of the domain verified in the WordPress admin panel.
 
-3. ![Domain Data](assets/screenshot-3.png)
+3. ![Domain Data](assets/images/screenshot-3.png)
    Screenshot of the domain data in the WordPress admin panel.
 
 == Changelog ==

@@ -1,40 +1,45 @@
 <?php
 /*
-Plugin Name: Cavalier by Hudson Rock
-Description: Cavalier plugin by Hudson Rock allows a one-click interface to monitor a database with millions of compromised computers.
-Version: 1.0
-Author: Hudson Rock
-Author URI: https://www.hudsonrock.com
-Text Domain: cavalier-wp-plugin
-*/
+ * Plugin Name: Cavalier by Hudson Rock
+ * Description: Cavalier plugin by Hudson Rock allows a one-click interface to monitor a database with millions of compromised computers.
+ * Version: 1.0
+ * Author: Hudson Rock
+ * Author URI: https://www.hudsonrock.com
+ * License:           GPL v2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: cavalier-wp-plugin
+ */
 
-function is_admin_user()
+if (!defined('ABSPATH'))
+    exit; // Exit if accessed directly      
+
+function cavalier_is_admin_user()
 {
     return current_user_can('manage_options');
 }
 
-function enqueue_plugin_styles()
+function cavalier_enqueue_plugin_styles()
 {
     $plugin_url = plugin_dir_url(__FILE__);
     wp_enqueue_style('style', $plugin_url . "/stylesheet.css");
 }
 
-add_action('admin_print_styles', 'enqueue_plugin_styles');
+add_action('admin_print_styles', 'cavalier_enqueue_plugin_styles');
 
-function enqueue_plugin_scripts()
+function cavalier_enqueue_plugin_scripts()
 {
     $plugin_url = plugin_dir_url(__FILE__);
     wp_enqueue_script('plugin-scripts', $plugin_url . 'scripts.js', array('jquery'), '1.0', true);
 }
 
-add_action('admin_enqueue_scripts', 'enqueue_plugin_scripts');
+add_action('admin_enqueue_scripts', 'cavalier_enqueue_plugin_scripts');
 
 
 register_activation_hook(__FILE__, 'cavalier_activate');
 
 function cavalier_activate()
 {
-    if (!is_admin_user())
+    if (!cavalier_is_admin_user())
         return;
     delete_option("cavalier_token");
     delete_option('cavalier_domain');
@@ -47,11 +52,13 @@ function cavalier_activate()
     $current_url = home_url();
     $parsed_url = parse_url($current_url);
     $wp_domain = preg_replace('/^(?:[a-zA-Z0-9-]+\.)*([a-zA-Z0-9-]+\.[a-zA-Z]{2,})$/', '$1', $parsed_url['host']);
-    $request_body = json_encode(array(
-        'domain' => $wp_domain,
-        'username' => $wp_username,
-        'email' => $wp_email,
-    ));
+    $request_body = json_encode(
+        array(
+            'domain' => $wp_domain,
+            'username' => $wp_username,
+            'email' => $wp_email,
+        )
+    );
 
     $args = array(
         'body' => $request_body,
@@ -79,7 +86,7 @@ add_action('admin_menu', 'cavalier_admin_menu');
 
 function cavalier_admin_menu()
 {
-    if (!is_admin_user())
+    if (!cavalier_is_admin_user())
         return;
     add_menu_page(
         'Cavalier Plugin',
@@ -130,13 +137,13 @@ function cavalier_login_button()
 
 function cavalier_admin_page()
 {
-    if (!is_admin_user())
+    if (!cavalier_is_admin_user())
         return;
     $domain = get_option('cavalier_domain');
     $dns_record = get_option('cavalier_dns_record');
     $cavalier_token = get_option('cavalier_token');
     echo '<div class="wrap">';
-    echo '<img src="https://cavalier.hudsonrock.com/static/media/logo-1.967abb2c.png" style="width:60px;"></img>';
+    echo '<img src="/wp-content/plugins/wp-cavalier/assets/images/logo.png" style="width:60px;"></img>';
     echo '<h1>Cavalier Verification Details</h1>';
 
     if (!empty($domain) && !empty($dns_record)) {
@@ -177,9 +184,9 @@ function cavalier_admin_page()
     </script>';
 }
 
-function verifyAndSaveToken()
+function cavalierVerifyAndSaveToken()
 {
-    if (!is_admin_user())
+    if (!cavalier_is_admin_user())
         return;
     $domain = get_option('cavalier_domain');
 
@@ -187,10 +194,13 @@ function verifyAndSaveToken()
         $url = 'https://cavalier.hudsonrock.com/api/user/wp-verify';
         $data = json_encode(array('domain' => $domain));
 
-        $response = wp_safe_remote_post($url, array(
-            'body' => $data,
-            'headers' => array('Content-Type' => 'application/json'),
-        ));
+        $response = wp_safe_remote_post(
+            $url,
+            array(
+                'body' => $data,
+                'headers' => array('Content-Type' => 'application/json'),
+            )
+        );
 
         if (!is_wp_error($response)) {
             $response_body = wp_remote_retrieve_body($response);
@@ -213,20 +223,20 @@ function verifyAndSaveToken()
 
 function cavalier_data_page()
 {
-    if (!is_admin_user())
+    if (!cavalier_is_admin_user())
         return;
     $domain = get_option('cavalier_domain');
     $cavalier_token = get_option('cavalier_token');
 
     echo '<div class="wrap">';
-    echo '<img src="https://cavalier.hudsonrock.com/static/media/logo-1.967abb2c.png" style="width:60px;"></img>';
-    echo '<h1>Cavalier Data (' . $domain . ')</h1>';
+    echo '<img src="/wp-content/plugins/wp-cavalier/assets/images/logo.png" style="width:60px;"></img>';
+    echo '<h1>Cavalier Data (' . esc_html($domain) . ')</h1>';
 
     if (!$cavalier_token) {
-        verifyAndSaveToken();
+        cavalierVerifyAndSaveToken();
     }
 
-    $counts = count_employees_users();
+    $counts = cavalier_count_employees_users();
     $default_type = $counts["employees"] > 0 ? "employee" : "client";
     $type = isset($_GET['type']) ? sanitize_text_field($_GET['type']) : $default_type;
     $cavalier_token = get_option('cavalier_token');
@@ -245,10 +255,10 @@ function cavalier_data_page()
             $count = $data['count'];
             echo '<div class="nav-tab-wrapper">';
             if ($counts["employees"] > 0) {
-                echo '<a style="margin-left:0px;" href="?page=cavalier-data&type=employee" class="nav-tab ' . ($type === 'employee' ? 'nav-tab-active' : '') . '"> Employees ' . ($count && $type === 'employee' ? '(' . $count . ')' : '') . '</a>';
+                echo '<a style="margin-left:0px;" href="?page=cavalier-data&type=employee" class="nav-tab ' . ($type === 'employee' ? 'nav-tab-active' : '') . '"> Employees ' . ($count && $type === 'employee' ? '(' . esc_html($count) . ')' : '') . '</a>';
             }
             if ($counts["users"] > 0) {
-                echo '<a style="margin-left:0px;" href="?page=cavalier-data&type=client" class="nav-tab ' . ($type === 'client' ? 'nav-tab-active' : '') . '">Users ' . ($count && $type === 'client' ? '(' . $count . ')' : '') . '</a>';
+                echo '<a style="margin-left:0px;" href="?page=cavalier-data&type=client" class="nav-tab ' . ($type === 'client' ? 'nav-tab-active' : '') . '">Users ' . ($count && $type === 'client' ? '(' . esc_html($count) . ')' : '') . '</a>';
             }
             echo '</div>';
             if ($data && isset($data['success']) && $data['success'] === true) {
@@ -269,13 +279,13 @@ function cavalier_data_page()
                 foreach ($data['data'] as $item) {
                     $row_id = 'row_' . uniqid();
                     echo '<tr>';
-                    echo '<td>' . $item['stealer'] . '</td>';
-                    echo '<td>' . ($item['url'] ?? 'Not Found') . '</td>';
-                    echo '<td>' . ($item['username'] ?? 'Not Found') . '</td>';
-                    echo '<td class="blur">' . ($item['password'] ?? 'Not Found') . '</td>';
-                    echo '<td>' . ($item['ip'] ?? 'Not Found') . '</td>';
-                    echo '<td>' . ($item['date_compromised'] ?? 'Not Found') . '</td>';
-                    echo '<td>' . ($item['date_uploaded'] ?? 'Not Found') . '</td>';
+                    echo '<td>' . esc_html($item['stealer']) . '</td>';
+                    echo '<td>' . esc_html($item['url'] ?? 'Not Found') . '</td>';
+                    echo '<td>' . esc_html($item['username'] ?? 'Not Found') . '</td>';
+                    echo '<td class="blur">' . esc_html($item['password'] ?? 'Not Found') . '</td>';
+                    echo '<td>' . esc_html($item['ip'] ?? 'Not Found') . '</td>';
+                    echo '<td>' . esc_html($item['date_compromised'] ?? 'Not Found') . '</td>';
+                    echo '<td>' . esc_html($item['date_uploaded'] ?? 'Not Found') . '</td>';
                     echo '</tr>';
                 }
 
@@ -287,7 +297,7 @@ function cavalier_data_page()
                     echo '<div class="tablenav">';
                     echo '<div class="tablenav-pages" style="text-align:center;float:none;">';
 
-                    $current_url = add_query_arg('paged', $page, $_SERVER['REQUEST_URI']);
+                    $current_url = esc_url(add_query_arg('paged', $page, $_SERVER['REQUEST_URI']));
 
                     $prev_page = max($page - 1, 1);
                     if ($page > 1) {
@@ -321,7 +331,7 @@ function cavalier_data_page()
     echo '</div>';
 }
 
-function count_employees_users()
+function cavalier_count_employees_users()
 {
     $cavalier_token = get_option('cavalier_token');
     if ($cavalier_token) {
@@ -335,7 +345,7 @@ function count_employees_users()
     }
 }
 
-function check_resolved_dates()
+function cavalier_check_resolved_dates()
 {
     $cavalier_token = get_option('cavalier_token');
     if ($cavalier_token) {
@@ -351,26 +361,26 @@ function check_resolved_dates()
 
 function cavalier_notice_bar()
 {
-    if (!is_admin_user())
+    if (!cavalier_is_admin_user())
         return;
     $users_url = admin_url('admin.php?page=cavalier-data&type=client');
     $employees_url = admin_url('admin.php?page=cavalier-data&type=employee');
     $cavalier_token = get_option('cavalier_token');
     if ($cavalier_token) {
-        $data = count_employees_users();
-        $resolved_dates = check_resolved_dates();
+        $data = cavalier_count_employees_users();
+        $resolved_dates = cavalier_check_resolved_dates();
         $employees = $data['employees'];
         $users = $data['users'];
         $show_employees = $resolved_dates['employees'];
         $show_users = $resolved_dates['users'];
         if ($show_employees && $employees > 0) {
             echo '<div class="employees-notice-bar cavalier-notice-bar">';
-            echo '<div class="notice-content"><div><img src="https://cavalier.hudsonrock.com/static/media/logo-1.967abb2c.png" width="30"/> New Compromised Employee Credentials Detected on Your Domain. <a href="' . esc_url($employees_url) . '" class="button button-tertiary" style="margin-left:15px;">View Employees Data</a></div><span style="color:white;" class="close-notice pointer" data-token="' . esc_attr($cavalier_token) . '" data-value="employees">X</span></div>';
+            echo '<div class="notice-content"><div><img src="/wp-content/plugins/wp-cavalier/assets/images/logo.png" width="30"/> New Compromised Employee Credentials Detected on Your Domain. <a href="' . esc_url($employees_url) . '" class="button button-tertiary" style="margin-left:15px;">View Employees Data</a></div><span style="color:white;" class="close-notice pointer" data-token="' . esc_attr($cavalier_token) . '" data-value="employees">X</span></div>';
             echo '</div>';
         }
         if ($show_users && $users > 0) {
             echo '<div class="users-notice-bar cavalier-notice-bar">';
-            echo '<div class="notice-content"><div><img src="https://cavalier.hudsonrock.com/static/media/logo-1.967abb2c.png" width="30"/> New Compromised User Credentials Detected on Your Domain. <a href="' . esc_url($users_url) . '" class="button button-primary" style="margin-left:15px;">View Users Data</a></div><span style="color:white;" class="close-notice pointer" data-token="' . esc_attr($cavalier_token) . '" data-value="users">X</span></div>';
+            echo '<div class="notice-content"><div><img src="/wp-content/plugins/wp-cavalier/assets/images/logo.png" width="30"/> New Compromised User Credentials Detected on Your Domain. <a href="' . esc_url($users_url) . '" class="button button-primary" style="margin-left:15px;">View Users Data</a></div><span style="color:white;" class="close-notice pointer" data-token="' . esc_attr($cavalier_token) . '" data-value="users">X</span></div>';
             echo '</div>';
         }
     }
